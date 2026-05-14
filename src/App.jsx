@@ -1,56 +1,61 @@
 import { useState } from 'react'
 import UserCard from './UserCard'
-import Greeting from './Greeting'
 
 function App() {
-  const [count, setCount] = useState(0)
+    const [users, setUsers] = useState([
+        { id: 1, name: "Dhiraj", age: 21, city: "Mumbai", isActive: true },
+        { id: 2, name: "Ram", age: 25, city: "Delhi", isActive: false }
+    ]);
 
-  const [name, setName] = useState("");
-  const [age, setAge] = useState("");
-  const [city, setCity] = useState("");
+    const [name, setName] = useState("");
+    const [age, setAge] = useState("");
+    const [city, setCity] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Add new user to users array
-    (e) => setName(e.target.value)
+    const handleSubmit = (e) => {
+        e.preventDefault();
 
-  };
+        const newUser = {
+            id: users.length + 1,
+            name: name,
+            age: Number(age),
+            city: city,
+            isActive: true
+        };
 
-  const users = [
-    { id: 1, name: "Dhiraj", age: 21, city: "Mumbai", isActive: true },
-    { id: 2, name: "Ram", age: 25, city: "Delhi", isActive: false },
-    { id: 3, name: "Sita", age: 23, city: "Bangalore", isActive: true }
-  ];
+        setUsers([...users, newUser]);
 
-  // Render all using map()
+        setName("");
+        setAge("");
+        setCity("");
+    };
 
-  return (
-    <>
-      <section id="center">
-        <button onClick={() => setCount((count) => --count)}>-</button>
-        <button
-          type="button"
-          className="counter"
-        >
-          {count}
-        </button>
-        <button onClick={() => setCount((count) => ++count)}>+</button>
-        <button onClick={() => setCount(0)}>reset</button>
+    return (
+        <>
+            <form onSubmit={handleSubmit}>
+                <input 
+                    type="text" 
+                    placeholder="Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                />
+                <input 
+                    type="number" 
+                    placeholder="Age"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                />
+                <input 
+                    type="text" 
+                    placeholder="City"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                />
+                <button type="submit">Add User</button>
+            </form>
 
-      </section>
-      {users.map(user => <UserCard key={user.id} {...user} />)}
-
-      <form onSubmit={handleSubmit}>
-        <input type="text" value={name} onChange={handleSubmit} />
-        <button >Submit</button>
-
-        <p>you typed: {name}  </p>
-
-      </form>
-
-
-    </>
-  )
+            {users.map(user => <UserCard key={user.id} {...user} />)}
+        </>
+    );
 }
 
 export default App
