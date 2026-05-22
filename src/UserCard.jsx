@@ -7,9 +7,10 @@ const UserCard = (props) => {
             <button onClick={props.onToggle}>
                 {props.isActive ? "Set Offline" : "Set Online"}
             </button>
-            
+            <button onClick= {props.onDelete}> Delete</button>
+
             <ul>
-                
+
             </ul>
 
         </div>
