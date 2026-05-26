@@ -6,7 +6,7 @@ function App() {
     const [name, setName] = useState("");
     const [age, setAge] = useState("");
     const [city, setCity] = useState("");
-    const [error, setError] = useState("");  // ✅ Add error state
+    const [error, setError] = useState("");
 
     useEffect(() => {
         fetch("http://localhost:3000/api/users")
@@ -17,17 +17,16 @@ function App() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");  // ✅ Clear previous errors
+        setError("");
 
-        // ✅ Frontend validation
         if (!name || !age || !city) {
             setError("All fields are required!");
-            return;  // ❌ Stop here
+            return;
         }
 
         if (age < 0 || age > 100) {
             setError("Age must be between 0 and 100!");
-            return;  // ❌ Stop here
+            return;
         }
 
         try {
@@ -37,7 +36,6 @@ function App() {
                 body: JSON.stringify({ name, age: Number(age), city })
             });
 
-            // ✅ Check if backend returned error
             if (!response.ok) {
                 const errorData = await response.json();
                 setError(errorData.error);
@@ -47,7 +45,6 @@ function App() {
             const newUser = await response.json();
             setUsers([...users, newUser]);
 
-            // ✅ Clear form
             setName("");
             setAge("");
             setCity("");
@@ -57,15 +54,17 @@ function App() {
         }
     };
 
+    // ✅ Changed: id → _id
     const deleteUser = async (id) => {
         await fetch(`http://localhost:3000/api/users/${id}`, {
             method: "DELETE"
         });
-        setUsers(users.filter(user => user.id !== id));
+        setUsers(users.filter(user => user._id !== id));  // ✅ _id
     };
 
+    // ✅ Changed: id → _id
     const toggleStatus = async (id) => {
-        const user = users.find(u => u.id === id);
+        const user = users.find(u => u._id === id);  // ✅ _id
         const updatedUser = { ...user, isActive: !user.isActive };
 
         await fetch(`http://localhost:3000/api/users/${id}`, {
@@ -74,13 +73,12 @@ function App() {
             body: JSON.stringify(updatedUser)
         });
 
-        setUsers(users.map(u => u.id === id ? updatedUser : u));
+        setUsers(users.map(u => u._id === id ? updatedUser : u));  // ✅ _id
     };
 
     return (
         <>
             <form onSubmit={handleSubmit}>
-                {/* ✅ Show error message */}
                 {error && <p style={{ color: 'red' }}>{error}</p>}
 
                 <input
@@ -104,12 +102,13 @@ function App() {
                 <button type="submit">Add User</button>
             </form>
 
+            {/* ✅ Changed: user.id → user._id */}
             {users.map(user => (
                 <UserCard
-                    key={user.id}
+                    key={user._id}
                     {...user}
-                    onToggle={() => toggleStatus(user.id)}
-                    onDelete={() => deleteUser(user.id)}
+                    onToggle={() => toggleStatus(user._id)}
+                    onDelete={() => deleteUser(user._id)}
                 />
             ))}
         </>

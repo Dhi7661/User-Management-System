@@ -1,96 +1,114 @@
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
+
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
 app.use(cors());
 
-app.use((req, res, next) => {
-    console.log(`${req.method} ${req.url} ${new Date().toISOString()}`);
-    next();
+const MONGO_URI = "mongodb://localhost:27017/userdb";
+
+mongoose.connect(MONGO_URI)
+    .then(() => console.log('✅ Connected to MongoDB!'))
+    .catch(err => console.error('❌ Error:', err));
+
+// ✅ Schema with isActive
+const userSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    age: { type: Number, required: true },
+    city: { type: String, required: true },
+    isActive: { type: Boolean, default: true }  // ✅ Added
 });
 
-// ✅ Add validation middleware BEFORE routes
+const User = mongoose.model('User', userSchema);
+
 const validateUser = (req, res, next) => {
     const { name, age, city } = req.body;
-    
     if (!name || !age || !city) {
-        return res.status(400).json({ error: "Missing required fields" });
+        return res.status(400).json({ error: "Missing fields" });
     }
-    
     if (age < 0 || age > 150) {
         return res.status(400).json({ error: "Invalid age" });
     }
-    
-    next();  // ✅ validation passed, continue to route
+    next();
 };
 
-let users = [
-    { id: 1, name: "Dhiraj", age: 21, city: "Mumbai", isActive: true },
-    { id: 2, name: "Ram", age: 25, city: "Delhi", isActive: false },
-    { id: 3, name: "Sita", age: 23, city: "Bangalore", isActive: true }
-];
-
-// GET all users
-app.get('/api/users', (req, res) => {
-    res.json(users);
-});
-
-// GET single user
-app.get('/api/users/:id', (req, res) => {
-    const user = users.find(u => u.id === parseInt(req.params.id));
-    
-    if (user) {
-        res.json(user);
-    } else {
-        res.status(404).json({ message: "User not found" });
+// GET all
+app.get('/api/users', async (req, res) => {
+    try {
+        const users = await User.find();
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
 
-// ✅ POST - Add validateUser middleware
-app.post('/api/users', validateUser, (req, res) => {
-    const newUser = {
-        id: users.length + 1,
-        name: req.body.name,
-        age: req.body.age,
-        city: req.body.city,
-        isActive: true
-    };
-    
-    users.push(newUser);
-    res.status(201).json(newUser);
+// GET single
+app.get('/api/users/:id', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (user) {
+            res.json(user);
+        } else {
+            res.status(404).json({ message: "User not found" });
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// ✅ PUT - Add validateUser middleware
-app.put('/api/users/:id', validateUser, (req, res) => {
-    const userId = parseInt(req.params.id);
-    const userIndex = users.findIndex(u => u.id === userId);
-    
-    if (userIndex !== -1) {
-        users[userIndex] = {
-            id: userId,
+// POST - Create
+app.post('/api/users', validateUser, async (req, res) => {
+    try {
+        const newUser = new User({
             name: req.body.name,
             age: req.body.age,
             city: req.body.city,
-            isActive: req.body.isActive
-        };
-        res.json(users[userIndex]);
-    } else {
-        res.status(404).json({ message: "User not found" });
+            isActive: true  // ✅ Default to true
+        });
+        await newUser.save();
+        res.status(201).json(newUser);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
     }
 });
 
-// DELETE - No validation needed
-app.delete('/api/users/:id', (req, res) => {
-    const userId = parseInt(req.params.id);
-    const userIndex = users.findIndex(u => u.id === userId);
-    
-    if (userIndex !== -1) {
-        const deletedUser = users.splice(userIndex, 1);
-        res.json({ message: "User deleted", user: deletedUser[0] });
-    } else {
-        res.status(404).json({ message: "User not found" });
+// PUT - Update ✅ Fixed to handle isActive
+app.put('/api/users/:id', async (req, res) => {
+    try {
+        const updated = await User.findByIdAndUpdate(
+            req.params.id,
+            {
+                name: req.body.name,
+                age: req.body.age,
+                city: req.body.city,
+                isActive: req.body.isActive  // ✅ Save isActive
+            },
+            { new: true }
+        );
+        if (updated) {
+            res.json(updated);
+        } else {
+            res.status(404).json({ message: "User not found" });
+        }
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// DELETE
+app.delete('/api/users/:id', async (req, res) => {
+    try {
+        const deleted = await User.findByIdAndDelete(req.params.id);
+        if (deleted) {
+            res.json({ message: "User deleted", user: deleted });
+        } else {
+            res.status(404).json({ message: "User not found" });
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
 
