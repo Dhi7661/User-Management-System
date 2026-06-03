@@ -6,7 +6,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: "*"
+}));
 
 const MONGO_URI = process.env.MONGO_URI;
 
@@ -34,6 +36,10 @@ const validateUser = (req, res, next) => {
     }
     next();
 };
+
+app.get("/", (req, res) => {
+    res.send("Backend is running");
+});
 
 // GET all
 app.get('/api/users', async (req, res) => {
