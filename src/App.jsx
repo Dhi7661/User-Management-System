@@ -9,7 +9,7 @@ function App() {
     const [error, setError] = useState("");
 
     useEffect(() => {
-        fetch("http://localhost:3000/api/users")
+        fetch(`${import.meta.env.VITE_API_URL}/api/users`)
             .then(res => res.json())
             .then(data => setUsers(data))
             .catch(err => console.error("Fetch error:", err));
@@ -30,7 +30,7 @@ function App() {
         }
 
         try {
-            const response = await fetch("http://localhost:3000/api/users", {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, age: Number(age), city })
@@ -56,7 +56,7 @@ function App() {
 
     // ✅ Changed: id → _id
     const deleteUser = async (id) => {
-        await fetch(`http://localhost:3000/api/users/${id}`, {
+        await fetch(`${import.meta.env.VITE_API_URL}/api/users/${id}`, {
             method: "DELETE"
         });
         setUsers(users.filter(user => user._id !== id));  // ✅ _id
@@ -67,7 +67,7 @@ function App() {
         const user = users.find(u => u._id === id);  // ✅ _id
         const updatedUser = { ...user, isActive: !user.isActive };
 
-        await fetch(`http://localhost:3000/api/users/${id}`, {
+        await fetch(`${import.meta.env.VITE_API_URL}/api/users/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(updatedUser)
